@@ -1,2 +1,2 @@
-# palindrom
-Tema 1 - ex 1
+# Tema 1
+Deadline: 28 octombrie 2016
