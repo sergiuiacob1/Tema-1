@@ -1,5 +1,4 @@
 #include "t1.h"
-#include <iostream>
 
 using namespace std;
 
@@ -16,19 +15,6 @@ void bktPrimeDivisors (unsigned short &rez,
 inline void sortVec (vector &vec);
 
 int main(){
-    /*matrix mat;
-    unsigned int i, j;
-    mat.lines=mat.columns=2;
-    mat.values[0][0]=1;
-    mat.values[0][1]=2;
-    mat.values[1][0]=3;
-    mat.values[1][1]=4;
-    mat=rotate (mat, 1, 4000000000);
-    for (i=0; i<mat.lines; ++i){
-            for (j=0; j<mat.columns; ++j)
-                cout<<mat.values[i][j]<<' ';
-            cout<<'\n';
-    }*/
     return 0;
 }
 
