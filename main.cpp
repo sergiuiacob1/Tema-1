@@ -1,4 +1,5 @@
 #include "t1.h"
+#include <iostream>
 
 using namespace std;
 
@@ -12,8 +13,22 @@ void bktPrimeDivisors (unsigned short &rez,
                        unsigned long long int prod,
                        int k,
                        int multipliedValues);
+inline void sortVec (vector &vec);
 
 int main(){
+    /*matrix mat;
+    unsigned int i, j;
+    mat.lines=mat.columns=2;
+    mat.values[0][0]=1;
+    mat.values[0][1]=2;
+    mat.values[1][0]=3;
+    mat.values[1][1]=4;
+    mat=rotate (mat, 1, 4000000000);
+    for (i=0; i<mat.lines; ++i){
+            for (j=0; j<mat.columns; ++j)
+                cout<<mat.values[i][j]<<' ';
+            cout<<'\n';
+    }*/
     return 0;
 }
 
@@ -84,7 +99,6 @@ unsigned int fibonnaci(int index){
 
 unsigned long perfectNumbers(unsigned int number){
     //humble solution based on extraordinary research
-    //heil forums
     //number>=30, macar 2 numere perfecte (6, 28)
 
     unsigned int prim1, prim2, p;
@@ -101,8 +115,6 @@ unsigned long perfectNumbers(unsigned int number){
 
     rez=(1<<(prim1-1)) * ((1<<prim1)-1);
     rez+=(1<<(prim2-1)) * ((1<<prim2)-1);
-
-
 
     /*
     unsigned long rez, nr, nrCount, sum, d;
@@ -225,6 +237,7 @@ matrix primeTwins(unsigned int count, unsigned int lowerBound){
     matrix rez;
 
     rez.lines=0;
+    rez.columns=2;
     x2=lowerBound+2;
     if (lowerBound%2==0)
         ++x2;
@@ -252,10 +265,11 @@ matrix primeTwins(unsigned int count, unsigned int lowerBound){
                 }
                 break;
             }
-            }
+        }
         x2+=4;
     }
-    if (count==1)
+
+    if (count<=2)
         return rez;
 
     while (1){
@@ -266,6 +280,7 @@ matrix primeTwins(unsigned int count, unsigned int lowerBound){
         if (isPrime(x2)){
             if (lastPrimeX3!=x1)//daca x1 nu coincide cu ultimul x3 pt. care am calculat primalitatea
                 x1IsPrime=isPrime (x1);
+            //altfel, deja stiu daca x1 e prim in functie de x3IsPrime
             if (x1IsPrime){
                 rez.values[rez.lines][0]=x1;
                 rez.values[rez.lines][1]=x2;
@@ -289,6 +304,173 @@ matrix primeTwins(unsigned int count, unsigned int lowerBound){
     return rez;
 }
 
+bool areOrderedFibonnaci (vector vec){
+    unsigned int i;
+    int f1=0, f2=1, f3;
+
+    if (!vec.length)
+        return true;
+
+    if (vec.length<2)
+        if (vec.values[0]!=0)
+            return false;
+
+    if (vec.length>=2)
+        if (vec.values[1]!=1)
+            return false;
+
+    for (i=2; i<vec.length; ++i){
+        f3=f1+f2;
+        if (vec.values[i]!=f3)
+            return false;
+        f1=f2;
+        f2=f3;
+    }
+    return true;
+}
+
+unsigned char checkVectorInclude(vector vecOne, vector vecTwo){
+    bool isIn1butNotIn2=false, isIn2ButNotIn1=false;
+    unsigned int i, j;
+
+    for (i=0; i<vecOne.length && !isIn1butNotIn2; ++i){
+        for (j=0; j<vecTwo.length; ++j)
+            if (vecOne.values[i]==vecTwo.values[j])
+                break;
+        if (j==vecTwo.length)//am ajuns la sfarsit si n-am gasit egalitate
+            isIn1butNotIn2=true;
+    }
+
+    for (i=0; i<vecTwo.length && !isIn2ButNotIn1; ++i){
+        for (j=0; j<vecOne.length; ++j)
+            if (vecTwo.values[i]==vecOne.values[j])
+                break;
+        if (j==vecOne.length)//am ajuns la sfarsit si n-am gasit egalitate
+            isIn2ButNotIn1=true;
+    }
+
+    if (!isIn1butNotIn2 && !isIn2ButNotIn1)
+        return 0;
+    if (isIn2ButNotIn1 && !isIn1butNotIn2)
+        return 1;
+    if (isIn1butNotIn2 && !isIn2ButNotIn1)
+        return 2;
+    return 3;
+}
+
+bool checkIsIn(vector vec, matrix mat){
+    unsigned int i, j;
+
+    if (vec.length==mat.columns){
+        for (i=0; i<mat.lines; ++i){
+            for (j=0; j<vec.length; ++j)
+                if (vec.values[j]!=(int)mat.values[i][j])
+                    break;
+            if (j==vec.length)
+                return true;
+        }
+    }
+    if (vec.length==mat.lines){
+        for (j=0; j<mat.columns; ++j){
+            for (i=0; i<mat.lines; ++i)
+                if (vec.values[i]!=(int)mat.values[i][j])
+                    break;
+            if (i==mat.lines)//good, good
+                return true;
+        }
+    }
+    return false;
+}
+
+matrix rotate(matrix mat, unsigned int rotLeft, unsigned int rotRight){
+    unsigned int ct, i, j, temp;
+    matrix aux;
+    //rotesc doar spre dreapta
+    if (rotLeft<rotRight)
+        rotRight-=rotLeft;
+        else{
+        rotLeft-=rotRight;
+        //transform rotatiile spre stanga in rotatii spre dreapta
+        rotLeft=rotLeft%4;
+        rotRight=4-rotLeft;
+        }
+    rotRight=rotRight%4;
+    for (ct=0; ct<rotRight; ++ct){
+        for (i=0; i<mat.lines; ++i){
+            for (j=0; j<mat.columns; ++j)
+                aux.values[j][mat.lines-i-1]=mat.values[i][j];
+        }
+        temp=mat.lines; mat.lines=mat.columns; mat.columns=temp;
+        for (i=0; i<mat.lines; ++i)
+            for (j=0; j<mat.columns; ++j)
+                mat.values[i][j]=aux.values[i][j];
+    }
+
+    return mat;
+}
+
+bool isPartOfFibonnaci(vector vec, unsigned int startingNumber){
+    //can't use areOrderedFibonnaci (vector vec)
+    unsigned int fib1, fib2, fib3;
+    unsigned int i;
+    //startingNumber>=2
+    for (fib1=fib2=fib3=1; fib2<startingNumber;){
+        fib3=fib1+fib2;
+        fib1=fib2;
+        fib2=fib3;
+    }
+    if (fib2!=startingNumber)//startingNumber trebuie sa fie numar Fib.
+        return false;
+
+    sortVec (vec);
+    for (i=0; i<vec.length && (int)fib2==vec.values[i]; ++i){
+        fib3=fib1+fib2;
+        fib1=fib2;
+        fib2=fib3;
+    }
+    if (i!=vec.length)
+        return false;
+    return true;
+}
+
+unsigned long setOperations(long sets[], char operations[], unsigned int x){
+    unsigned long rez, i;
+    switch (operations[0]){
+        case 'U': rez=sets[0]|sets[1]; break;
+        case 'A': rez=sets[0]&sets[1]; break;
+        case '\\': rez=sets[0]&(-(~sets[1])); break;
+        case '/': rez=sets[1]&(~sets[0]); break;
+    }
+    for (i=2; i<x; ++i)
+        switch (operations[i-1]){
+            case 'U': rez=rez|sets[i]; break;
+            case 'A': rez=rez&sets[i]; break;
+            case '\\': rez=rez&(~sets[i]); break;
+            case '/': rez=sets[i]&(-(~rez)); break;
+        }
+    return rez;
+}
+
+unsigned long bitOperations(long numbers[], char operations[], unsigned int x){
+    unsigned long rez, i;
+    switch (operations[0]){
+        case '<': rez=numbers[0]<<numbers[1]; break;
+        case '>': rez=numbers[0]>>numbers[1]; break;
+        case '^': rez=numbers[0]^numbers[1]; break;
+        case '|': rez=numbers[0]|numbers[1]; break;
+        case '&': rez=numbers[0]&numbers[1]; break;
+    }
+    for (i=2; i<x; ++i)
+        switch (operations[i-1]){
+            case '<': rez=rez<<numbers[1]; break;
+            case '>': rez=rez>>numbers[1]; break;
+            case '^': rez=rez^numbers[1]; break;
+            case '|': rez=rez|numbers[1]; break;
+            case '&': rez=rez&numbers[1]; break;
+        }
+    return rez;
+}
+
 bool isPrime (const unsigned int &x){//multi-purpose
     unsigned int d=3;
     if (x%2==0 && x!=2)
@@ -299,4 +481,19 @@ bool isPrime (const unsigned int &x){//multi-purpose
         if (x%d==0)
             return false;
     return true;
+}
+
+inline void sortVec (vector &vec){//sorteaza crescator
+    unsigned int i, j, pozMin;
+    int aux;
+    for (i=0; i<vec.length-1; ++i){
+        pozMin=i;
+        for (j=i+1; j<vec.length; ++j)
+            if (vec.values[j]<vec.values[pozMin])
+                pozMin=j;
+        aux=vec.values[i];
+        vec.values[i]=vec.values[pozMin];
+        vec.values[pozMin]=aux;
+    }
+    return;
 }
