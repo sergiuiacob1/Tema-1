@@ -212,8 +212,8 @@ matrix primeTwins(unsigned int count, unsigned int lowerBound){
 
     rez.lines=0;
     rez.columns=2;
-    x2=lowerBound+2;
-    if (lowerBound%2==0)
+    x2=lowerBound+3;
+    if (x2%2==0)
         ++x2;
     if (!count){
         rez.columns=0;
@@ -432,7 +432,7 @@ unsigned long setOperations(long sets[], char operations[], unsigned int x){
     switch (operations[0]){
         case 'U': rez=sets[0]|sets[1]; break;
         case 'A': rez=sets[0]&sets[1]; break;
-        case '\\': rez=sets[0]&(-(~sets[1])); break;
+        case '\\': rez=sets[0]&(~sets[1]); break;
         case '/': rez=sets[1]&(~sets[0]); break;
     }
     for (i=2; i<x; ++i)
@@ -440,7 +440,7 @@ unsigned long setOperations(long sets[], char operations[], unsigned int x){
             case 'U': rez=rez|sets[i]; break;
             case 'A': rez=rez&sets[i]; break;
             case '\\': rez=rez&(~sets[i]); break;
-            case '/': rez=sets[i]&(-(~rez)); break;
+            case '/': rez=sets[i]&(~rez); break;
         }
     return rez;
 }
@@ -448,19 +448,19 @@ unsigned long setOperations(long sets[], char operations[], unsigned int x){
 unsigned long bitOperations(long numbers[], char operations[], unsigned int x){
     unsigned long rez, i;
     switch (operations[0]){
-        case '<': rez=numbers[0]<<numbers[1]; break;
-        case '>': rez=numbers[0]>>numbers[1]; break;
+        case '<': rez=(numbers[0]<<numbers[1]); break;
+        case '>': rez=(numbers[0]>>numbers[1]); break;
         case '^': rez=numbers[0]^numbers[1]; break;
         case '|': rez=numbers[0]|numbers[1]; break;
         case '&': rez=numbers[0]&numbers[1]; break;
     }
     for (i=2; i<x; ++i)
         switch (operations[i-1]){
-            case '<': rez=rez<<numbers[1]; break;
-            case '>': rez=rez>>numbers[1]; break;
-            case '^': rez=rez^numbers[1]; break;
-            case '|': rez=rez|numbers[1]; break;
-            case '&': rez=rez&numbers[1]; break;
+            case '<': rez=(rez<<numbers[i]); break;
+            case '>': rez=(rez>>numbers[i]); break;
+            case '^': rez=rez^numbers[i]; break;
+            case '|': rez=rez|numbers[i]; break;
+            case '&': rez=rez&numbers[i]; break;
         }
     return rez;
 }
@@ -486,6 +486,7 @@ bool palindrom(long number){
         binaryRepresentation[i]=1;
     }
     //check if it is palindrom
+
     for (i=0; i<16; ++i)
         if (binaryRepresentation[i]!=binaryRepresentation[32-i-1])
             return false;
@@ -515,6 +516,8 @@ bool fibonnaciSpirale(matrix mat){
     return areOrderedFibonnaci(melc);
 }
 
+
+
 unsigned int minRouteLength(smaze maze){
     unsigned int dist[MAX_ARRAY_LENGTH_LONG][MAX_ARRAY_LENGTH_LONG];//aprox. 4 MB
     struct poz coada[MAX_ARRAY_LENGTH_LONG*MAX_ARRAY_LENGTH_LONG+1];//aprox. 4 MB
@@ -528,7 +531,7 @@ unsigned int minRouteLength(smaze maze){
     pozCoada=0; countCoada=1;
     dist[maze.rowOfDeparture][maze.columnOfDeparture]=1;
 
-    while (pozCoada<countCoada && dist[maze.rowOfDeparture]){
+    while (pozCoada<countCoada && !dist[maze.rowOfExit][maze.columnOfExit]){
         currentNode=coada[pozCoada++];
 
         for (k=0; k<4; ++k){
@@ -549,15 +552,16 @@ unsigned int minRouteLength(smaze maze){
 void transformMatrix(char mat[MAX_ARRAY_LENGTH_LONG][MAX_ARRAY_LENGTH_LONG],
                      unsigned int rows,
                      unsigned int columns){
-    unsigned int i, j;
+    int i, j;//fara memorie auxiliara :> :> :>
     for (i=0; i<rows; ++i)
         for (j=0; j<columns; ++j)
-        if (!mat[i][j]){
-            mat[i][0]=mat[0][j]=0;
-        }
-    for (i=0; i<rows; ++i)
-        for (j=0; j<columns; ++j)
-            if (!mat[i][0] || !mat[0][j])
+            if (!mat[i][j]){
+                mat[i][0]=2;
+                mat[0][j]=3;
+            }
+    for (i=rows-1; i>=0; --i)
+        for (j=columns-1; j>=0; --j)
+            if (mat[i][0]==2 || mat[0][j]==3)
                 mat[i][j]=0;
     return;
 }
