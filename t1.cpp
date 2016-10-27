@@ -2,6 +2,10 @@
 
 using namespace std;
 
+struct poz{
+    short int lin, col;
+};
+
 bool isPrime (const unsigned int &);
 void bktPrimeDivisors (unsigned short &rez,
                        unsigned int *v,
@@ -13,10 +17,7 @@ void bktPrimeDivisors (unsigned short &rez,
                        int k,
                        int multipliedValues);
 inline void sortVec (vector &vec);
-
-int main(){
-    return 0;
-}
+inline bool isInMatrix (smaze &, struct poz &);
 
 bool isPalindrom(unsigned long long number){
     unsigned long long mirroredNumber, numberCopy;
@@ -26,7 +27,6 @@ bool isPalindrom(unsigned long long number){
         mirroredNumber=mirroredNumber*10+numberCopy%10;
         numberCopy/=10;
     }
-
     return (number==mirroredNumber);
 }
 
@@ -37,7 +37,6 @@ unsigned char sumBinaryFigure(unsigned long long number){
         sum+=number%2;
         number/=2;
     }
-
     return sum;
 }
 
@@ -79,30 +78,27 @@ unsigned int fibonnaci(int index){
 
     if (!index)
         fib3=0;
-
     return fib3;
 }
 
 unsigned long perfectNumbers(unsigned int number){
     //humble solution based on extraordinary research
     //number>=30, macar 2 numere perfecte (6, 28)
-
     unsigned int prim1, prim2, p;
     unsigned long rez;
-
     prim2=2;
 
-    for (p=3; 1LL * (1<<(p-1)) * ((1<<p)-1) <= number; p+=2){
+    for (p=3; 1LL * (1<<(p-1)) * ((1<<p)-1) <= number; p+=2)
         if (isPrime((1<<p)-1)){//mersenne prime => perfect number
             prim1=prim2;
             prim2=p;
         }
-    }
 
     rez=(1<<(prim1-1)) * ((1<<prim1)-1);
     rez+=(1<<(prim2-1)) * ((1<<prim2)-1);
 
     /*
+    //Varianta 2, brute-force optimizat
     unsigned long rez, nr, nrCount, sum, d;
     if (number%2==0)
         nr=number-1;
@@ -122,18 +118,15 @@ unsigned long perfectNumbers(unsigned int number){
             rez+=nr;
         }
     }*/
-
     return rez;
 }
 
 unsigned short primeDivisors(unsigned int left, unsigned int right){
-
     if (left>right)
         return primeDivisors (right, left);
-    if (left==right)
+    if (left==right || !left)
         return 1;
 
-    //unsigned int nrPrime[15]={2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
     //prod de nr prime pana la 29 inclusiv depaseste unsigned int (aprox 6 mld.)
     unsigned int nrPrime[MAX_ARRAY_LENGTH], lgNrPrime=0, x, d, nrPrimeDivisors;
     unsigned long long int prod;
@@ -151,14 +144,12 @@ unsigned short primeDivisors(unsigned int left, unsigned int right){
     }
     --maxPrimeDivisors;
     prod/=nrPrime[i-1];
-
     if (left<=prod && prod<=right){
         bktPrimeDivisors (rez, nrPrime, lgNrPrime, left, right, maxPrimeDivisors, 1, 0, 0);
         return rez;
     }
 
-    //if not... brute
-
+    //if not... brute force
     maxPrimeDivisors=0;
     for (x=left; x<=right; ++x){
         nrPrimeDivisors=0;
@@ -174,7 +165,6 @@ unsigned short primeDivisors(unsigned int left, unsigned int right){
         //daca e patrat perfect, d=nr/d, adun 1 sg. data
         if (d*d==x && isPrime(d))
             ++nrPrimeDivisors;
-
         if (nrPrimeDivisors>maxPrimeDivisors){
             maxPrimeDivisors=nrPrimeDivisors;
             rez=1;
@@ -183,8 +173,6 @@ unsigned short primeDivisors(unsigned int left, unsigned int right){
             if (nrPrimeDivisors==maxPrimeDivisors)
                 ++rez;
     }
-
-
     return rez;
 }
 
@@ -213,7 +201,7 @@ void bktPrimeDivisors (unsigned short &rez,
         prod*=v[i];
         bktPrimeDivisors (rez, v, lgV, left, right, maxPrimeDivisors, prod, i+1, multipliedValues+1);
         prod/=v[i];
-        }
+    }
 }
 
 matrix primeTwins(unsigned int count, unsigned int lowerBound){
@@ -227,8 +215,10 @@ matrix primeTwins(unsigned int count, unsigned int lowerBound){
     x2=lowerBound+2;
     if (lowerBound%2==0)
         ++x2;
-    if (!count)
+    if (!count){
+        rez.columns=0;
         return rez;
+    }
 
     //prima pereche o tratez separat, eventual a doua daca x3 e prim
     //ca sa am x3IsPrime calculat
@@ -254,7 +244,6 @@ matrix primeTwins(unsigned int count, unsigned int lowerBound){
         }
         x2+=4;
     }
-
     if (count<=2)
         return rez;
 
@@ -286,7 +275,6 @@ matrix primeTwins(unsigned int count, unsigned int lowerBound){
             }
         }
     }
-
     return rez;
 }
 
@@ -296,11 +284,9 @@ bool areOrderedFibonnaci (vector vec){
 
     if (!vec.length)
         return true;
-
     if (vec.length<2)
         if (vec.values[0]!=0)
             return false;
-
     if (vec.length>=2)
         if (vec.values[1]!=1)
             return false;
@@ -317,23 +303,46 @@ bool areOrderedFibonnaci (vector vec){
 
 unsigned char checkVectorInclude(vector vecOne, vector vecTwo){
     bool isIn1butNotIn2=false, isIn2ButNotIn1=false;
-    unsigned int i, j;
+    unsigned int i, j, ctOne, ctTwo;
 
-    for (i=0; i<vecOne.length && !isIn1butNotIn2; ++i){
-        for (j=0; j<vecTwo.length; ++j)
-            if (vecOne.values[i]==vecTwo.values[j])
-                break;
-        if (j==vecTwo.length)//am ajuns la sfarsit si n-am gasit egalitate
-            isIn1butNotIn2=true;
+    sortVec (vecOne);
+    sortVec (vecTwo);
+    if (!vecOne.length || !vecTwo.length){//multimea vida e inclusa in multimea vida
+        if (!vecOne.length && !vecTwo.length)
+            return 0;
+        if (!vecOne.length && vecTwo.length)
+            return 1;
+        return 2;
     }
 
-    for (i=0; i<vecTwo.length && !isIn2ButNotIn1; ++i){
-        for (j=0; j<vecOne.length; ++j)
-            if (vecTwo.values[i]==vecOne.values[j])
-                break;
-        if (j==vecOne.length)//am ajuns la sfarsit si n-am gasit egalitate
+    for (i=j=0; i<vecOne.length && j<vecTwo.length; ++i, ++j){//O(min (n, m))
+        ctOne=ctTwo=1;
+        while (i+1<vecOne.length && vecOne.values[i]==vecOne.values[i+1]){
+            ++i;
+            ++ctOne;
+        }
+        while (j+1<vecTwo.length && vecTwo.values[j]==vecTwo.values[j+1]){
+            ++j;
+            ++ctTwo;
+        }
+
+        if (vecOne.values[i]==vecTwo.values[j]){
+            if (ctOne<ctTwo)
+                isIn2ButNotIn1=true;
+                else
+                if (ctOne>ctTwo)
+                    isIn1butNotIn2=true;
+        }
+            else{
+            //valorile sunt diferite
+            isIn1butNotIn2=isIn2ButNotIn1=true;
+            }
+    }
+    if (i!=vecOne.length)//mai am elemente in primul vector
+        isIn1butNotIn2=true;
+        else
+        if (j!=vecTwo.length)
             isIn2ButNotIn1=true;
-    }
 
     if (!isIn1butNotIn2 && !isIn2ButNotIn1)
         return 0;
@@ -391,7 +400,6 @@ matrix rotate(matrix mat, unsigned int rotLeft, unsigned int rotRight){
             for (j=0; j<mat.columns; ++j)
                 mat.values[i][j]=aux.values[i][j];
     }
-
     return mat;
 }
 
@@ -457,6 +465,103 @@ unsigned long bitOperations(long numbers[], char operations[], unsigned int x){
     return rez;
 }
 
+bool palindrom(long number){
+    long cNumber, i;
+    bool binaryRepresentation[40];
+    if (number<0)
+        cNumber=-number;
+        else
+        cNumber=number;
+    for (i=0; cNumber || i<32; ++i){
+        binaryRepresentation[i]=cNumber%2;
+        cNumber/=2;
+    }
+
+    if (number<0){
+        for (i=0; i<32; ++i)
+            binaryRepresentation[i]=1-binaryRepresentation[i];
+        //adun 1 in baza 2
+        for (i=0; i<32 && binaryRepresentation[i]; ++i);
+        binaryRepresentation[i-1]=0;
+        binaryRepresentation[i]=1;
+    }
+    //check if it is palindrom
+    for (i=0; i<16; ++i)
+        if (binaryRepresentation[i]!=binaryRepresentation[32-i-1])
+            return false;
+    return true;
+}
+
+bool fibonnaciSpirale(matrix mat){
+    unsigned int i, j, ct, limit=50;//nu pot fi mai mult de 50 de numere
+    vector melc;
+    ct=0; melc.length=0;
+    if (mat.lines*mat.columns>limit)
+        return false;
+
+    while (melc.length<mat.lines*mat.columns-(mat.lines==mat.columns)){
+        for (j=ct; j<mat.columns-ct-1; ++j)
+            melc.values[melc.length++]=mat.values[ct][j];
+        for (i=ct; i<mat.lines-ct-1; ++i)
+            melc.values[melc.length++]=mat.values[i][mat.columns-ct-1];
+        for (j=mat.columns-ct-1; j>ct; --j)
+            melc.values[melc.length++]=mat.values[mat.lines-ct-1][j];
+        for (i=mat.lines-ct-1; i>ct; --i)
+            melc.values[melc.length++]=mat.values[i][ct];
+        ++ct;
+    }
+    if (mat.lines==mat.columns && mat.lines%2)
+        melc.values[melc.length++]=mat.values[ct][ct];
+    return areOrderedFibonnaci(melc);
+}
+
+unsigned int minRouteLength(smaze maze){
+    unsigned int dist[MAX_ARRAY_LENGTH_LONG][MAX_ARRAY_LENGTH_LONG];//aprox. 4 MB
+    struct poz coada[MAX_ARRAY_LENGTH_LONG*MAX_ARRAY_LENGTH_LONG+1];//aprox. 4 MB
+    struct poz currentNode, adjacentNode;
+    unsigned int pozCoada, countCoada, k;
+    short int dl[5]={-1, 0, 1, 0};
+    short int dc[5]={0, 1, 0, -1};
+
+    coada[0].lin=(short int)maze.rowOfDeparture;
+    coada[0].col=(short int)maze.columnOfDeparture;
+    pozCoada=0; countCoada=1;
+    dist[maze.rowOfDeparture][maze.columnOfDeparture]=1;
+
+    while (pozCoada<countCoada && dist[maze.rowOfDeparture]){
+        currentNode=coada[pozCoada++];
+
+        for (k=0; k<4; ++k){
+            adjacentNode.lin=currentNode.lin+dl[k];
+            adjacentNode.col=currentNode.col+dc[k];
+            if (isInMatrix (maze, adjacentNode))
+                if (!dist[adjacentNode.lin][adjacentNode.col] &&
+                    !maze.maze[adjacentNode.lin][adjacentNode.col]){
+                    coada[countCoada++]=adjacentNode;
+                    dist[adjacentNode.lin][adjacentNode.col]=dist[currentNode.lin][currentNode.col]+1;
+                }
+        }
+    }
+
+    return dist[maze.rowOfExit][maze.columnOfExit]-1;
+}
+
+void transformMatrix(char mat[MAX_ARRAY_LENGTH_LONG][MAX_ARRAY_LENGTH_LONG],
+                     unsigned int rows,
+                     unsigned int columns){
+    unsigned int i, j;
+    for (i=0; i<rows; ++i)
+        for (j=0; j<columns; ++j)
+        if (!mat[i][j]){
+            mat[i][0]=mat[0][j]=0;
+        }
+    for (i=0; i<rows; ++i)
+        for (j=0; j<columns; ++j)
+            if (!mat[i][0] || !mat[0][j])
+                mat[i][j]=0;
+    return;
+}
+
 bool isPrime (const unsigned int &x){//multi-purpose
     unsigned int d=3;
     if (x%2==0 && x!=2)
@@ -472,6 +577,8 @@ bool isPrime (const unsigned int &x){//multi-purpose
 inline void sortVec (vector &vec){//sorteaza crescator
     unsigned int i, j, pozMin;
     int aux;
+
+    if (!vec.length) return;
     for (i=0; i<vec.length-1; ++i){
         pozMin=i;
         for (j=i+1; j<vec.length; ++j)
@@ -482,4 +589,12 @@ inline void sortVec (vector &vec){//sorteaza crescator
         vec.values[pozMin]=aux;
     }
     return;
+}
+
+inline bool isInMatrix (smaze &maze, struct poz &a){
+    if (a.lin<0 || a.lin>=(short int)maze.noOfRows)
+        return false;
+    if (a.col<0 || a.col>=(short int)maze.noOfColumns)
+        return false;
+    return true;
 }
