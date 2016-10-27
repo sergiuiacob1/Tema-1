@@ -104,7 +104,6 @@ unsigned long perfectNumbers(unsigned int number){
         nr=number-1;
         else
         nr=number;
-
     for (rez=nrCount=0; nrCount<2; nr-=2){}
         sum=1;//1 sigur il divide pe nr
         for (d=2; d*d<nr; ++d)
@@ -153,9 +152,7 @@ unsigned short primeDivisors(unsigned int left, unsigned int right){
     maxPrimeDivisors=0;
     for (x=left; x<=right; ++x){
         nrPrimeDivisors=0;
-        if (x%2==0)
-            ++nrPrimeDivisors;
-        for (d=3; d*d<x; d+=2)
+        for (d=2; d*d<x; ++d)
             if (x%d==0){
                 if (isPrime(d))
                     ++nrPrimeDivisors;
