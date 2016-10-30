@@ -82,23 +82,28 @@ unsigned int fibonnaci(int index){
 }
 
 unsigned long perfectNumbers(unsigned int number){
+    unsigned long perfNumbers[10]={0, 6, 28, 496, 8128, 33550336};//sol. cea mai eficienta
+    unsigned int i;
+    for (i=5; perfNumbers[i]>number; --i);
+    return perfNumbers[i]+perfNumbers[i-1];
+
     //humble solution based on extraordinary research
     //number>=30, macar 2 numere perfecte (6, 28)
-    unsigned int prim1, prim2, p;
+    /*unsigned int prim1, prim2, p;
     unsigned long rez;
     prim2=2;
 
-    for (p=3; 1LL * (1<<(p-1)) * ((1<<p)-1) <= number; p+=2)
+    for (p=3; 1LL * (1<<(p-1)) * ((1<<p)-1) <= (unsigned long long int)number; p+=2)//sol. eficienta
         if (isPrime((1<<p)-1)){//mersenne prime => perfect number
             prim1=prim2;
             prim2=p;
         }
 
     rez=(1<<(prim1-1)) * ((1<<prim1)-1);
-    rez+=(1<<(prim2-1)) * ((1<<prim2)-1);
+    rez+=(1<<(prim2-1)) * ((1<<prim2)-1);*/
 
     /*
-    //Varianta 2, brute-force optimizat
+    //sol. mai putin eficienta
     unsigned long rez, nr, nrCount, sum, d;
     if (number%2==0)
         nr=number-1;
@@ -117,7 +122,7 @@ unsigned long perfectNumbers(unsigned int number){
             rez+=nr;
         }
     }*/
-    return rez;
+    //return rez;
 }
 
 unsigned short primeDivisors(unsigned int left, unsigned int right){
@@ -202,9 +207,8 @@ void bktPrimeDivisors (unsigned short &rez,
 }
 
 matrix primeTwins(unsigned int count, unsigned int lowerBound){
-    unsigned int x1, x2, x3;
-    unsigned int lastPrimeX3;
-    bool x1IsPrime=false, x3IsPrime=false;
+    unsigned int x1, x2;
+    bool x1IsPrime=false, x2IsPrime=false;
     matrix rez;
 
     rez.lines=0;
@@ -217,61 +221,18 @@ matrix primeTwins(unsigned int count, unsigned int lowerBound){
         return rez;
     }
 
-    //prima pereche o tratez separat, eventual a doua daca x3 e prim
-    //ca sa am x3IsPrime calculat
-    while (1){
-        x1=x2-2; x3=x2+2;
-        if (isPrime(x2)){
-            if (isPrime(x1)){
-                rez.values[rez.lines][0]=x1;
-                rez.values[rez.lines][1]=x2;
-                ++rez.lines;
-                if (count==1)
-                    break;
-
-                x3IsPrime=isPrime (x3);
-                lastPrimeX3=x3;
-                if (x3IsPrime){
-                    rez.values[rez.lines][0]=x2;
-                    rez.values[rez.lines][1]=x3;
-                    ++rez.lines;
-                }
-                break;
-            }
+    x1=x2-2;
+    x2IsPrime=isPrime(x1);
+    do{
+        x1IsPrime=x2IsPrime;
+        x2IsPrime=isPrime(x2);
+        if (x1IsPrime && x2IsPrime){
+            rez.values[rez.lines][0]=x1;
+            rez.values[rez.lines][1]=x2;
+            ++rez.lines;
         }
-        x2+=4;
-    }
-    if (count<=2)
-        return rez;
-
-    while (1){
-        x2+=4;
-        x1=x2-2; x3=x2+2;//x1 devine x3-ul anterior
-        x1IsPrime=x3IsPrime;//incerc sa nu calculez de 2 ori acelasi lucru
-
-        if (isPrime(x2)){
-            if (lastPrimeX3!=x1)//daca x1 nu coincide cu ultimul x3 pt. care am calculat primalitatea
-                x1IsPrime=isPrime (x1);
-            //altfel, deja stiu daca x1 e prim in functie de x3IsPrime
-            if (x1IsPrime){
-                rez.values[rez.lines][0]=x1;
-                rez.values[rez.lines][1]=x2;
-                ++rez.lines;
-                if (rez.lines==count)
-                    break;
-            }
-
-            x3IsPrime=isPrime (x3);
-            if (x3IsPrime){
-                rez.values[rez.lines][0]=x2;
-                rez.values[rez.lines][1]=x3;
-                ++rez.lines;
-                lastPrimeX3=x3;
-                if (rez.lines==count)
-                    break;
-            }
-        }
-    }
+        x1+=2; x2+=2;
+    }while (rez.lines<count);
     return rez;
 }
 
@@ -426,13 +387,8 @@ bool isPartOfFibonnaci(vector vec, unsigned int startingNumber){
 
 unsigned long setOperations(long sets[], char operations[], unsigned int x){
     unsigned long rez, i;
-    switch (operations[0]){
-        case 'U': rez=sets[0]|sets[1]; break;
-        case 'A': rez=sets[0]&sets[1]; break;
-        case '\\': rez=sets[0]&(~sets[1]); break;
-        case '/': rez=sets[1]&(~sets[0]); break;
-    }
-    for (i=2; i<x; ++i)
+    rez=sets[0];
+    for (i=1; i<x; ++i)
         switch (operations[i-1]){
             case 'U': rez=rez|sets[i]; break;
             case 'A': rez=rez&sets[i]; break;
@@ -444,7 +400,9 @@ unsigned long setOperations(long sets[], char operations[], unsigned int x){
 
 unsigned long bitOperations(long numbers[], char operations[], unsigned int x){
     unsigned long rez, i;
-    switch (operations[0]){
+    if (x==1)
+        return (unsigned long)numbers[0];
+    switch (operations[0]){//primele 2 le tratez separat sa nu fie un caz special, ex. nr negative
         case '<': rez=(numbers[0]<<numbers[1]); break;
         case '>': rez=(numbers[0]>>numbers[1]); break;
         case '^': rez=numbers[0]^numbers[1]; break;
@@ -516,12 +474,17 @@ bool fibonnaciSpirale(matrix mat){
 
 
 unsigned int minRouteLength(smaze maze){
-    unsigned int dist[MAX_ARRAY_LENGTH_LONG][MAX_ARRAY_LENGTH_LONG];//aprox. 4 MB
-    struct poz coada[MAX_ARRAY_LENGTH_LONG*MAX_ARRAY_LENGTH_LONG+1];//aprox. 4 MB
+    unsigned int dist[MAX_ARRAY_LENGTH_LONG+2][MAX_ARRAY_LENGTH_LONG+2];//aprox. 4 MB
+    struct poz coada[MAX_ARRAY_LENGTH_LONG*MAX_ARRAY_LENGTH_LONG+2];//aprox. 4 MB
     struct poz currentNode, adjacentNode;
     unsigned int pozCoada, countCoada, k;
     short int dl[5]={-1, 0, 1, 0};
     short int dc[5]={0, 1, 0, -1};
+
+    //initializare
+    for (pozCoada=0; pozCoada<maze.noOfRows; ++pozCoada)//pe post de contor linie
+        for (countCoada=0; countCoada<(unsigned int)maze.noOfColumns; ++countCoada)
+            dist[pozCoada][countCoada]=0;
 
     coada[0].lin=(short int)maze.rowOfDeparture;
     coada[0].col=(short int)maze.columnOfDeparture;
@@ -549,16 +512,19 @@ unsigned int minRouteLength(smaze maze){
 void transformMatrix(char mat[MAX_ARRAY_LENGTH_LONG][MAX_ARRAY_LENGTH_LONG],
                      unsigned int rows,
                      unsigned int columns){
-    int i, j;//fara memorie auxiliara :> :> :>
-    for (i=0; i<rows; ++i)
-        for (j=0; j<columns; ++j)
+    int i, j;
+    bool lin[MAX_ARRAY_LENGTH_LONG+10], col[MAX_ARRAY_LENGTH_LONG+10];
+    for (i=0; i<MAX_ARRAY_LENGTH_LONG; ++i)
+        lin[i]=col[i]=false;
+
+    for (i=0; i<(int)rows; ++i)
+        for (j=0; j<(int)columns; ++j)
             if (!mat[i][j]){
-                mat[i][0]=2;
-                mat[0][j]=3;
+                lin[i]=col[j]=true;
             }
-    for (i=rows-1; i>=0; --i)
-        for (j=columns-1; j>=0; --j)
-            if (mat[i][0]==2 || mat[0][j]==3)
+    for (i=0; i<(int)rows; ++i)
+        for (j=0; j<(int)columns; ++j)
+            if (lin[i] || col[j])
                 mat[i][j]=0;
     return;
 }
