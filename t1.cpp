@@ -84,7 +84,7 @@ unsigned int fibonnaci(int index){
 unsigned long perfectNumbers(unsigned int number){
     unsigned long perfNumbers[10]={0, 6, 28, 496, 8128, 33550336};//sol. cea mai eficienta
     unsigned int i;
-    for (i=5; perfNumbers[i]>number; --i);
+    for (i=5; perfNumbers[i]>=number; --i);
     return perfNumbers[i]+perfNumbers[i-1];
 
     //humble solution based on extraordinary research
@@ -93,7 +93,7 @@ unsigned long perfectNumbers(unsigned int number){
     unsigned long rez;
     prim2=2;
 
-    for (p=3; 1LL * (1<<(p-1)) * ((1<<p)-1) <= (unsigned long long int)number; p+=2)//sol. eficienta
+    for (p=3; 1LL * (1<<(p-1)) * ((1<<p)-1) < (unsigned long long int)number; p+=2)//sol. eficienta
         if (isPrime((1<<p)-1)){//mersenne prime => perfect number
             prim1=prim2;
             prim2=p;
@@ -105,10 +105,9 @@ unsigned long perfectNumbers(unsigned int number){
     /*
     //sol. mai putin eficienta
     unsigned long rez, nr, nrCount, sum, d;
-    if (number%2==0)
-        nr=number-1;
-        else
-        nr=number;
+    nr=number-1;
+    if (nr%2==0)
+        --nr;
     for (rez=nrCount=0; nrCount<2; nr-=2){}
         sum=1;//1 sigur il divide pe nr
         for (d=2; d*d<nr; ++d)
